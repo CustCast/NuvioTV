@@ -559,11 +559,35 @@ class MainActivity : ComponentActivity() {
 
                     DisposableEffect(navController) {
                         val listener = Consumer<Intent> { incomingIntent ->
-                            navController.handleDeepLink(incomingIntent)
+                            val handled = navController.handleDeepLink(incomingIntent)
+                            if (!handled) {
+                                val uri = incomingIntent.data
+                                if (uri != null && uri.scheme == "nuvio" && uri.host == "collection") {
+                                    val pathSegments = uri.pathSegments
+                                    if (pathSegments.size == 2) {
+                                        val collectionId = pathSegments[0]
+                                        val folderId = pathSegments[1]
+                                        navController.navigate(Screen.FolderDetail.createRoute(collectionId, folderId))
+                                    }
+                                }
+                            }
                         }
                         addOnNewIntentListener(listener)
                         onDispose {
                             removeOnNewIntentListener(listener)
+                        }
+                    }
+
+                    // Explicitly handle cold-start deep links
+                    LaunchedEffect(intent) {
+                        val uri = intent?.data
+                        if (uri != null && uri.scheme == "nuvio" && uri.host == "collection") {
+                            val pathSegments = uri.pathSegments
+                            if (pathSegments.size == 2) {
+                                val collectionId = pathSegments[0]
+                                val folderId = pathSegments[1]
+                                navController.navigate(Screen.FolderDetail.createRoute(collectionId, folderId))
+                            }
                         }
                     }
 
