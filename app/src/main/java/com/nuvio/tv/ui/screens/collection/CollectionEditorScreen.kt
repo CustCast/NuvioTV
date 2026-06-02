@@ -522,13 +522,26 @@ private fun FolderListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = folder.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = NuvioColors.TextPrimary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = folder.title,
+                        style = MaterialTheme.typography.titleSmall,
+                        color = NuvioColors.TextPrimary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+
+                    Spacer(modifier = Modifier.weight(1f))
+
+                    Text(
+                        text = "[:${folder.id}]",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = NuvioColors.TextTertiary
+                    )
+                }
                 val shapeLabel = stringResource(
                     when (folder.tileShape) {
                         com.nuvio.tv.domain.model.PosterShape.POSTER -> R.string.collections_editor_shape_poster

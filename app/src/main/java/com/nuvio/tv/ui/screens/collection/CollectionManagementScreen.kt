@@ -599,11 +599,19 @@ private fun CollectionListItem(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = collection.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = NuvioColors.TextPrimary
-                )
+                Column {
+                    Text(
+                        text = collection.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = NuvioColors.TextPrimary
+                    )
+                    Text(
+                        text = "Collection ID: ${collection.id}",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = NuvioColors.TextTertiary,
+                        modifier = Modifier.padding(top = 2.dp)
+                    )
+                }
                 Text(
                     text = stringResource(R.string.collections_folder_count, collection.folders.size),
                     style = MaterialTheme.typography.bodySmall,
