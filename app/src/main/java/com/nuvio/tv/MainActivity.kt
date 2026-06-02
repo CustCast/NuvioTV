@@ -17,6 +17,9 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.keyframes
+import android.content.Intent
+import androidx.compose.runtime.DisposableEffect
+import androidx.core.util.Consumer
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -245,6 +248,11 @@ class MainActivity : ComponentActivity() {
 
     /** True until the first onResume after onCreate completes. */
     private var isFirstResumeAfterCreate = false
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
 
     @OptIn(ExperimentalTvMaterial3Api::class, ExperimentalFoundationApi::class)
     override fun attachBaseContext(newBase: Context) {
@@ -548,6 +556,17 @@ class MainActivity : ComponentActivity() {
                         else -> Screen.LayoutSelection.route
                     }
                     val navController = rememberNavController()
+
+                    DisposableEffect(navController) {
+                        val listener = Consumer<Intent> { incomingIntent ->
+                            navController.handleDeepLink(incomingIntent)
+                        }
+                        addOnNewIntentListener(listener)
+                        onDispose {
+                            removeOnNewIntentListener(listener)
+                        }
+                    }
+
                     var optimisticRoute by remember { mutableStateOf<String?>(null) }
                     val navBackStackEntry by navController.currentBackStackEntryAsState()
                     val actualRoute = navBackStackEntry?.destination?.route

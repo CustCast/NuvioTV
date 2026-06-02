@@ -14,6 +14,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.nuvio.tv.core.build.AppFeaturePolicy
 import com.nuvio.tv.domain.model.ExperienceMode
 import com.nuvio.tv.ui.screens.CatalogSeeAllScreen
@@ -1125,6 +1126,11 @@ fun NuvioNavHost(
             arguments = listOf(
                 navArgument("collectionId") { type = NavType.StringType },
                 navArgument("folderId") { type = NavType.StringType }
+            ),
+            deepLinks = listOf(
+                navDeepLink {
+                    uriPattern = "nuvio://collection/{collectionId}/{folderId}"
+                }
             )
         ) {
             com.nuvio.tv.ui.screens.collection.FolderDetailScreen(
