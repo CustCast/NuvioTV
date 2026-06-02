@@ -1,27 +1,40 @@
-# 1. Generate a local testing keystore if it doesn't exist yet
-if (-not (Test-Path "local_test_keystore.jks")) {
-    Write-Host "Creating a local debug signature key..." -ForegroundColor Cyan
-    keytool -genkey -v -keystore local_test_keystore.jks `
-      -storepass temp_password123 -alias temp_alias -keypass temp_password123 `
-      -keyalg RSA -keysize 2048 -validity 10000 `
-      -dname "CN=Nuvio Local Build, O=Testing, C=US"
-}
+name: Build Test APK
 
-# 2. Inject environment variables and compile via Gradle
-Write-Host "Compiling fresh Nuvio Debug APK..." -ForegroundColor Green
-$env:NUVIO_RELEASE_STORE_FILE="$(Get-Location)/local_test_keystore.jks"
-$env:NUVIO_RELEASE_KEY_ALIAS="temp_alias"
-$env:NUVIO_RELEASE_KEY_PASSWORD="temp_password123"
-$env:NUVIO_RELEASE_STORE_PASSWORD="temp_password123"
+on:
+  workflow_dispatch: # Allows you to trigger this manually with a single click
 
-./gradlew :app:assembleFullDebug -x lintVitalFullDebug
+jobs:
+  build:
+    runs-on: ubuntu-latest
 
-# 3. Auto-install straight into WSA if compilation succeeds
-if ($LASTEXITCODE -eq 0) {
-    Write-Host "Compilation successful! Connecting to WSA..." -ForegroundColor Green
-    adb connect 127.0.0.1:58526
-    Write-Host "Deploying APK straight onto your system..." -ForegroundColor Green
-    adb install -r app/build/outputs/apk/full/debug/app-full-debug.apk
-} else {
-    Write-Host "Compilation failed. Check errors above." -ForegroundColor Red
-}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Generate Temporary Testing Keystore
+        run: |
+          keytool -genkey -v -keystore local_test_keystore.jks \
+            -storepass temp_password123 -alias temp_alias -keypass temp_password123 \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -dname "CN=Nuvio Test Build, O=Testing, C=US"
+
+      - name: Compile Full Debug APK
+        env:
+          NUVIO_RELEASE_STORE_FILE: "${{ github.workspace }}/local_test_keystore.jks"
+          NUVIO_RELEASE_KEY_ALIAS: "temp_alias"
+          NUVIO_RELEASE_KEY_PASSWORD: "temp_password123"
+          NUVIO_RELEASE_STORE_PASSWORD: "temp_password123"
+        run: ./gradlew :app:assembleFullDebug -x lintVitalFullDebug
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: nuvio-deeplink-test
+          path: app/build/outputs/apk/full/debug/*.apk
